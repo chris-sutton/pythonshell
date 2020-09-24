@@ -1,3 +1,12 @@
-
-/bin/ls -1  | grep p2
+prt run date
+date
 prt -
+
+prt run date (fpn)
+/bin/date
+prt -
+
+prt run TIMEPGM
+./TIMEPGM  1.1
+prt -
+

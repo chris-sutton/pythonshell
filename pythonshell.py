@@ -2,6 +2,7 @@
 import os
 import sys
 import re
+import resource
 
 USER = os.getenv("USER")
 AOSENV = {
