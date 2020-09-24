@@ -1,0 +1,21 @@
+prt TESTING envprt
+envprt
+prt TESTING set
+set HI HO
+envprt
+prt TESTING unset
+unset HI
+envprt
+unset HI
+prt TESTING path replacements
+prt unset worked $HI $AOSPATH and $AOSHOME just fine
+prt TESTING witch
+witch date
+witch BRH
+prt TESTING pwd
+pwd
+prt TESTING cd
+cd ..
+pwd
+cd pythonshell
+pwd
