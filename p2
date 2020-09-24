@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import os
+import glob
 import sys
 import re
 import resource
@@ -226,9 +227,12 @@ def processStatement(statement=None, statementList=None):
         
 def witch(cmd):
     for path in AOSENV["AOSPATH"]:
-            for root, d, files in os.walk(path):
-                if cmd in files:
-                    return os.path.join(root, cmd)
+        for file in glob.glob(path):
+            if cmd == file:
+                return file
+        for root, d, files in os.walk(path):
+            if cmd in files:
+                return os.path.join(root, cmd)
     return None
 
 
