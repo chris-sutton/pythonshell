@@ -5,7 +5,7 @@ cat > TEMPIN <<EOF
 prt set limits to 999s 9mb    # 9mb ok on 64-bit system
 lim 999 9
 prt -
-
+lim
 prt run mallocing lots of space
 ./BIGMEMPGM 100
 prt -

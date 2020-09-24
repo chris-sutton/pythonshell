@@ -213,7 +213,15 @@ def processStatement(statement=None, statementList=None):
         os.chdir(statements[1])
         AOSENV["AOSCWD"] = os.getcwd()
         return True
-
+    elif statements[0] == "lim":
+        if len(statements) == 3:
+            resource.setrlimit(resource.RLIMIT_CPU, (int(statements[1]), int(statements[1])))
+            resource.setrlimit(resource.RLIMIT_AS, (int(statements[2])*1000000, int(statements[2])*1000000))
+        else:
+            _, cpumax = resource.getrlimit(resource.RLIMIT_CPU)
+            _, memmax = resource.getrlimit(resource.RLIMIT_AS)
+            print(cpumax, memmax, sep=" ")
+        return True
     return False
         
 def witch(cmd):
