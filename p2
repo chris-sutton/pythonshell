@@ -229,10 +229,7 @@ def witchGen(cmd):
     for path in AOSENV["AOSPATH"]:
         for file in glob.glob(path):
             if cmd == file:
-                return file
-        for root, d, files in os.walk(path):
-            if cmd in files:
-                yield os.path.join(root, cmd)
+                yield file
     yield None
 
 def witch(cmd):
