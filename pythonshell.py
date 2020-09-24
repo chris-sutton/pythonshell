@@ -49,8 +49,10 @@ def main():
                     if pid2:
                         # in parent again
                         #wait for both
-                        id1, ex1 = os.waitpid(pid, os.WNOHANG)
-                        id2, ex2 = os.waitpid(pid2, os.WNOHANG)
+                        os.close(r)
+                        os.close(w)
+                        id1, ex1 = os.waitpid(pid, 0)
+                        id2, ex2 = os.waitpid(pid2, 0)
                     else:
                         
                         # in child 2...confusing I know
