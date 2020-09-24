@@ -232,8 +232,8 @@ def witch(cmd):
                 return file
         for root, d, files in os.walk(path):
             if cmd in files:
-                return os.path.join(root, cmd)
-    return None
+                yield os.path.join(root, cmd)
+    yield None
 
 
 
