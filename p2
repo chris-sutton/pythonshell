@@ -84,7 +84,6 @@ def main():
                         exe = witch(stmts[0])
 
                         if exe is not None and os.access(exe, os.X_OK):
-                            print("IM HERE!")
                             os.execv(exe, stmts)
                             sys.exit(0)
                         elif os.access(stmts[0], os.X_OK):
@@ -130,6 +129,7 @@ def main():
                 if not success:
                     stmts = prepStatement(statement)
                     exe = witch(stmts[0])
+
                     if exe is not None and os.access(exe, os.X_OK):
                         pid = os.fork()
                         if pid:
@@ -146,8 +146,6 @@ def main():
                         else:
                             os.execv(stmts[0], stmts)
                             sys.exit(0)
-                    else:
-                        sys.exit(0)
 
             
             ##################################
@@ -225,16 +223,22 @@ def processStatement(statement=None, statementList=None):
         return True
     return False
         
-def witchGen(cmd):
-    for path in AOSENV["AOSPATH"]:
-        for file in glob.glob(path):
-            if cmd == file:
-                yield file
-    yield None
-
+# def witchGen(cmd):
+#     for path in AOSENV["AOSPATH"]:
+#         for file in glob.iglob(path):
+#             print(file)
+#             if cmd == file:
+#                 yield file
+#     yield None
 def witch(cmd):
-    pathGen = witchGen(cmd)
-    return next(pathGen)
+    for path in AOSENV["AOSPATH"]:
+        tmp = os.path.join(path,cmd)
+        if os.access(tmp, os.X_OK):
+            return tmp
+    return None
+# def witch(cmd):
+#     pathGen = witchGen(cmd)
+#     return next(pathGen)
 
 #############################################
 if __name__ == "__main__":
