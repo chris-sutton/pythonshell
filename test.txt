@@ -19,3 +19,7 @@ cd ..
 pwd
 cd pythonshell
 pwd
+prt TESTING /bin/date
+/bin/date
+date
+ls | grep p2

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+cat > TEMPIN <<EOF
+date
+/bin/date
+date
+ls
+./TIMEPGM 1.1
+date
+EOF
+
+## ---------------------
+
+./p2 < TEMPIN
+
+# rm -f TEMPIN

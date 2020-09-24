@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cc -o prt PRTPGM.c
+
+cat > TEMPIN <<EOF
+
+envset foo BAR
+
+prt env for foo and aos vars ----------------------------
+envprt
+prt -
+
+prt env for foo and aos vars again ----------------------
+/usr/bin/printenv 
+prt -
+
+prt favor builtin over pgm ----------------------------
+prt howdy there
+prt -
+
+prt run the prt pgm ----------------------------
+./prt howdy there
+prt -
+EOF
+
+## ---------------------
+
+./p2 < TEMPIN
+
+# rm -f TEMPIN
+rm -f prt

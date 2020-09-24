@@ -1,0 +1,3 @@
+
+/bin/ls -1  | grep p2
+prt -

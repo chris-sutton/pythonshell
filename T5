@@ -1,0 +1,26 @@
+#!/bin/sh
+
+## this one tests time limits
+
+cat > TEMPIN <<EOF
+prt show current lim
+lim
+prt -
+prt set limits to 3s 999mb
+lim 3 999
+prt -
+
+prt run more than 3s and get killed
+./TIMEPGM 7
+prt -
+
+prt run more than 3s and get killed AGAIN
+./TIMEPGM 7
+prt -
+EOF
+
+## ---------------------
+
+./p2 < TEMPIN
+
+# rm -f TEMPIN

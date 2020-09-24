@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cat > TEMPIN <<EOF
+
+/bin/ls -1  | grep p2
+prt -
+EOF
+
+## ---------------------
+
+./p2 < TEMPIN
+
+# rm -f TEMPIN
