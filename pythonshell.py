@@ -225,7 +225,7 @@ def processStatement(statement=None, statementList=None):
         return True
     return False
         
-def witch(cmd):
+def witchGen(cmd):
     for path in AOSENV["AOSPATH"]:
         for file in glob.glob(path):
             if cmd == file:
@@ -235,7 +235,9 @@ def witch(cmd):
                 yield os.path.join(root, cmd)
     yield None
 
-
+def witch(cmd):
+    pathGen = witchGen(cmd)
+    return next(pathGen)
 
 #############################################
 if __name__ == "__main__":
