@@ -138,7 +138,7 @@ def main():
                 pid = os.fork()
                 if pid:
                     # in parent
-                    # os.setpgid(pid, 0)
+                    background.append([int(pid), "background", statement])
                     pass
                 else:
                     # in child
@@ -274,6 +274,7 @@ def processStatement(statement=None, statementList=None):
             procnum = int(statements[1])
         if procnum < len(background):
             foreground = background.pop(procnum)
+            foreground[1] = "foreground"
             os.kill(foreground[0], signal.SIGCONT)
         True
     elif statements[0] == "bg":
