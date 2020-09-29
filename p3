@@ -5,6 +5,7 @@ import sys
 import re
 import resource
 import signal
+from time import sleep
 
 USER = os.getenv("USER")
 AOSENV = {
@@ -51,6 +52,7 @@ def main():
     global AOSENV, USER, foreground, background
     tty = os.isatty(0)
     while True:
+        sleep(0.01)
         try:
             if len(foreground) > 0:
                 signal.pause()
@@ -87,8 +89,8 @@ def main():
                         # wait for both
                         os.close(r)
                         os.close(w)
-                        id1, ex1 = os.waitpid(pid, 0)
-                        id2, ex2 = os.waitpid(pid2, 0)
+                        # id1, ex1 = os.waitpid(pid, 0)
+                        # id2, ex2 = os.waitpid(pid2, 0)
                     else:
 
                         # in child 2...confusing I know
