@@ -39,6 +39,7 @@ def suspendHandler(signum, frame):
     # os.setpgid(foreground[0], 0)
     if len(foreground) > 0:
         os.kill(foreground[0], signal.SIGTSTP)
+        print("\nsuspended {}".format(foreground[0]))
         foreground[1] = "suspended"
         background.append(foreground.copy())
         foreground.clear()
@@ -47,12 +48,14 @@ def suspendHandler(signum, frame):
 signal.signal(signal.SIGCHLD, childHandler)
 signal.signal(signal.SIGTSTP, suspendHandler)
 
+count = 0
+
 
 def main():
-    global AOSENV, USER, foreground, background
+    global AOSENV, USER, foreground, background, count
     tty = os.isatty(0)
     while True:
-        sleep(0.01)
+        sleep(0.05)
         try:
             if len(foreground) > 0:
                 signal.pause()
@@ -60,7 +63,7 @@ def main():
                 statement = input(USER + "_sh> ")
             else:
                 statement = input()
-
+            print(statement)
             # implement everything...basically
             statement = statement.strip()
             if statement.isspace() or not statement:
@@ -90,7 +93,7 @@ def main():
                         os.close(r)
                         os.close(w)
                         # id1, ex1 = os.waitpid(pid, 0)
-                        # id2, ex2 = os.waitpid(pid2, 0)
+                        id2, ex2 = os.waitpid(pid2, 0)
                     else:
 
                         # in child 2...confusing I know
@@ -141,8 +144,8 @@ def main():
                 if pid:
                     # in parent
                     background.append([int(pid), "background", statement])
-                    pass
                 else:
+                    os.setpgid(os.getpid(), 0)
                     # in child
                     success = processStatement(statement)
                     if not success:
@@ -150,10 +153,10 @@ def main():
                         exe = witch(stmts[0])
                         if exe is not None and os.access(exe, os.X_OK):
                             os.execv(exe, stmts)
-                            sys.exit(0)
+
                         elif os.access(stmts[0], os.X_OK):
                             os.execv(stmts[0], stmts)
-                            sys.exit(0)
+                        sys.exit(0)
                     else:
                         sys.exit(0)
                 # remove the & before continuing
@@ -185,8 +188,6 @@ def main():
                         if pid:
                             proc = [pid, "foreground", statement]
                             foreground = proc
-                            # pid2, ex = os.waitpid(pid, 0)
-                            pass
                         else:
                             os.execv(stmts[0], stmts)
                             sys.exit(0)
@@ -267,18 +268,18 @@ def processStatement(statement=None, statementList=None):
             print(cpumax, memmax, sep=" ")
         return True
     elif statements[0] == "jobs":
-        for i in range(len(background)):
-            print('[{}] {} process {} -> "{}"'.format(i, background[i][1],
-                                                      background[i][0], background[i][2]))
+        printJobs()
+        return True
     elif statements[0] == "fg":
         procnum = 0
         if len(statements) == 2:
             procnum = int(statements[1])
         if procnum < len(background):
             foreground = background.pop(procnum)
+            # os.setpgid(foreground[0], os.getgid())
             foreground[1] = "foreground"
             os.kill(foreground[0], signal.SIGCONT)
-        True
+        return True
     elif statements[0] == "bg":
         procnum = 0
         if len(statements) == 2:
@@ -286,8 +287,15 @@ def processStatement(statement=None, statementList=None):
         if procnum < len(background):
             background[procnum][1] = "background"
             os.kill(background[procnum][0], signal.SIGCONT)
+        return True
     return False
 
+
+def printJobs():
+    global background
+    for i in range(len(background)):
+        print('[{}] {} process {} -> "{}"'.format(i, background[i][1],
+                                                  background[i][0], background[i][2]))
 # def witchGen(cmd):
 #     for path in AOSENV["AOSPATH"]:
 #         for file in glob.iglob(path):
