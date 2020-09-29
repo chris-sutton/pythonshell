@@ -1,6 +1,6 @@
-p2: pythonshell.py
-	cp pythonshell.py p2 && chmod +x p2
+p3: pythonshell.py
+	cp pythonshell.py p3 && chmod +x p3
 clean:
-	rm -f p2
+	rm -f p3
 test:
-	make && ./p2 < test.txt
+	make && ./p3 < test.txt
