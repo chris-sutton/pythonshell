@@ -34,6 +34,11 @@ def findPid(pid, lst):
     return None
 
 
+def sigIntHandler(signum, frame):
+    killChildrenExceptBackground()
+    sys.exit(0)
+
+
 def suspendHandler(signum, frame):
     global foreground, background
     # os.setpgid(foreground[0], 0)
@@ -47,7 +52,7 @@ def suspendHandler(signum, frame):
 
 signal.signal(signal.SIGCHLD, childHandler)
 signal.signal(signal.SIGTSTP, suspendHandler)
-
+signal.signal(signal.SIGINT, sigIntHandler)
 count = 0
 
 
@@ -195,7 +200,29 @@ def main():
             ##################################
 
         except EOFError:
+            killChildrenExceptBackground()
             sys.exit(0)
+
+
+def killChildrenExceptBackground():
+    global background, foreground
+    for j in background:
+        try:
+            #print("if {} exists".format(j[0]))
+            os.kill(j[0], 0)
+        except OSError:
+            pass
+        else:
+            # if "suspended" in j:
+            #print("killing {}".format(j[0]))
+            os.kill(j[0], signal.SIGKILL)
+    if len(foreground) > 0:
+        try:
+            os.kill(j[0], 0)
+        except OSError:
+            pass
+        else:
+            os.kill(foreground[0], signal.SIGKILL)
 
 
 def prepStatement(statement):
