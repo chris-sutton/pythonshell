@@ -204,7 +204,6 @@ def main():
                 statement = input(USER + "_sh> ")
             else:
                 statement = input()
-            print(statement)
             # implement everything...basically
             statement = statement.strip()
             if statement.isspace() or not statement:
