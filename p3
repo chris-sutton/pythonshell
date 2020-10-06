@@ -36,8 +36,11 @@ def findPid(pid, lst):
 
 def sigIntHandler(signum, frame):
     if len(foreground) > 0:
-        os.kill(foreground[0], signal.SIGKILL)
-        foreground.clear()
+        try:
+            os.kill(foreground[0], signal.SIGKILL)
+            foreground.clear()
+        except:
+            pass
 
 
 def suspendHandler(signum, frame):
