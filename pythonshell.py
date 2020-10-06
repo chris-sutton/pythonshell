@@ -35,8 +35,9 @@ def findPid(pid, lst):
 
 
 def sigIntHandler(signum, frame):
-    killChildrenExceptBackground()
-    sys.exit(0)
+    if len(foreground) > 0:
+        os.kill(foreground[0], signal.SIGKILL)
+        foreground.clear()
 
 
 def suspendHandler(signum, frame):
@@ -50,11 +51,143 @@ def suspendHandler(signum, frame):
         foreground.clear()
 
 
+def killChildrenExceptBackground():
+    global background, foreground
+    for j in background:
+        try:
+            #print("if {} exists".format(j[0]))
+            os.kill(j[0], 0)
+        except OSError:
+            pass
+        else:
+            # if "suspended" in j:
+            #print("killing {}".format(j[0]))
+            os.kill(j[0], signal.SIGKILL)
+    if len(foreground) > 0:
+        try:
+            os.kill(j[0], 0)
+        except OSError:
+            pass
+        else:
+            os.kill(foreground[0], signal.SIGKILL)
+
+
+def prepStatement(statement):
+    statements = statement.split("#")[0].split(" ")
+    statements = [x.strip() for x in statements if x != ""]
+    return statements
+
+
+def processStatement(statement=None, statementList=None):
+    global AOSENV, USER, foreground, background
+    statements = []
+    if statement is None:
+        statements = statementList
+    else:
+        statements = prepStatement(statement)
+
+    if statements[0] == "exit":
+        sys.exit(0)
+        return True
+
+    elif statements[0] in ["envset", "set"]:
+        AOSENV[statements[1]] = statements[2]
+        return True
+
+    elif statements[0] == "envprt":
+        for key, val in AOSENV.items():
+            print(key + "=", end="")
+            if isinstance(val, list):
+                print(':'.join(val))
+            else:
+                print(val)
+        return True
+
+    elif statements[0] in ["envunset", "unset"]:
+        try:
+            del AOSENV[statements[1]]
+        except KeyError:
+            pass
+        return True
+
+    elif statements[0] == "prt":
+        for txt in statements[1:]:
+            print(txt, end=" ")
+        print()
+        return True
+
+    elif statements[0] == "witch":
+        found = witch(statements[1])
+        if found is not None:
+            print(found)
+        return True
+
+    elif statements[0] == "pwd":
+        print(AOSENV["AOSCWD"])
+        return True
+
+    elif statements[0] == "cd":
+        os.chdir(statements[1])
+        AOSENV["AOSCWD"] = os.getcwd()
+        return True
+    elif statements[0] == "lim":
+        if len(statements) == 3:
+            resource.setrlimit(resource.RLIMIT_CPU,
+                               (int(statements[1]), int(statements[1])))
+            resource.setrlimit(resource.RLIMIT_AS, (int(
+                statements[2])*1000000, int(statements[2])*1000000))
+        else:
+            _, cpumax = resource.getrlimit(resource.RLIMIT_CPU)
+            _, memmax = resource.getrlimit(resource.RLIMIT_AS)
+            print(cpumax, memmax, sep=" ")
+        return True
+    elif statements[0] == "jobs":
+        printJobs()
+        return True
+    elif statements[0] == "fg":
+        procnum = 0
+        if len(statements) == 2:
+            procnum = int(statements[1])
+        if procnum < len(background):
+            foreground = background.pop(procnum)
+            # os.setpgid(foreground[0], os.getgid())
+            foreground[1] = "foreground"
+            os.kill(foreground[0], signal.SIGCONT)
+        return True
+    elif statements[0] == "bg":
+        procnum = 0
+        if len(statements) == 2:
+            procnum = int(statements[1])
+        if procnum < len(background):
+            background[procnum][1] = "background"
+            os.kill(background[procnum][0], signal.SIGCONT)
+        return True
+    return False
+
+
+def printJobs():
+    global background
+    for i in range(len(background)):
+        print('[{}] {} process {} -> "{}"'.format(i, background[i][1],
+                                                  background[i][0], background[i][2]))
+
+
+def witch(cmd):
+    global AOSENV
+    for path in AOSENV["AOSPATH"]:
+        tmp = os.path.join(path, cmd)
+        if os.access(tmp, os.X_OK):
+            return tmp
+    return None
+
+
+##########################################################
+#####################   Start Main   #####################
+##########################################################
 signal.signal(signal.SIGCHLD, childHandler)
 signal.signal(signal.SIGTSTP, suspendHandler)
 signal.signal(signal.SIGINT, sigIntHandler)
 count = 0
-
 
 def main():
     global AOSENV, USER, foreground, background, count
@@ -202,148 +335,6 @@ def main():
         except EOFError:
             killChildrenExceptBackground()
             sys.exit(0)
-
-
-def killChildrenExceptBackground():
-    global background, foreground
-    for j in background:
-        try:
-            #print("if {} exists".format(j[0]))
-            os.kill(j[0], 0)
-        except OSError:
-            pass
-        else:
-            # if "suspended" in j:
-            #print("killing {}".format(j[0]))
-            os.kill(j[0], signal.SIGKILL)
-    if len(foreground) > 0:
-        try:
-            os.kill(j[0], 0)
-        except OSError:
-            pass
-        else:
-            os.kill(foreground[0], signal.SIGKILL)
-
-
-def prepStatement(statement):
-    statements = statement.split("#")[0].split(" ")
-    statements = [x.strip() for x in statements if x != ""]
-    return statements
-
-
-def processStatement(statement=None, statementList=None):
-    global AOSENV, USER, foreground, background
-    statements = []
-    if statement is None:
-        statements = statementList
-    else:
-        statements = prepStatement(statement)
-
-    if statements[0] == "exit":
-        sys.exit(0)
-        return True
-
-    elif statements[0] in ["envset", "set"]:
-        AOSENV[statements[1]] = statements[2]
-        return True
-
-    elif statements[0] == "envprt":
-        for key, val in AOSENV.items():
-            print(key + "=", end="")
-            if isinstance(val, list):
-                print(':'.join(val))
-            else:
-                print(val)
-        return True
-
-    elif statements[0] in ["envunset", "unset"]:
-        try:
-            del AOSENV[statements[1]]
-        except KeyError:
-            pass
-        return True
-
-    elif statements[0] == "prt":
-        for txt in statements[1:]:
-            print(txt, end=" ")
-        print()
-        return True
-
-    elif statements[0] == "witch":
-        found = witch(statements[1])
-        if found is not None:
-            print(found)
-        return True
-
-    elif statements[0] == "pwd":
-        print(AOSENV["AOSCWD"])
-        return True
-
-    elif statements[0] == "cd":
-        os.chdir(statements[1])
-        AOSENV["AOSCWD"] = os.getcwd()
-        return True
-    elif statements[0] == "lim":
-        if len(statements) == 3:
-            resource.setrlimit(resource.RLIMIT_CPU,
-                               (int(statements[1]), int(statements[1])))
-            resource.setrlimit(resource.RLIMIT_AS, (int(
-                statements[2])*1000000, int(statements[2])*1000000))
-        else:
-            _, cpumax = resource.getrlimit(resource.RLIMIT_CPU)
-            _, memmax = resource.getrlimit(resource.RLIMIT_AS)
-            print(cpumax, memmax, sep=" ")
-        return True
-    elif statements[0] == "jobs":
-        printJobs()
-        return True
-    elif statements[0] == "fg":
-        procnum = 0
-        if len(statements) == 2:
-            procnum = int(statements[1])
-        if procnum < len(background):
-            foreground = background.pop(procnum)
-            # os.setpgid(foreground[0], os.getgid())
-            foreground[1] = "foreground"
-            os.kill(foreground[0], signal.SIGCONT)
-        return True
-    elif statements[0] == "bg":
-        procnum = 0
-        if len(statements) == 2:
-            procnum = int(statements[1])
-        if procnum < len(background):
-            background[procnum][1] = "background"
-            os.kill(background[procnum][0], signal.SIGCONT)
-        return True
-    return False
-
-
-def printJobs():
-    global background
-    for i in range(len(background)):
-        print('[{}] {} process {} -> "{}"'.format(i, background[i][1],
-                                                  background[i][0], background[i][2]))
-# def witchGen(cmd):
-#     for path in AOSENV["AOSPATH"]:
-#         for file in glob.iglob(path):
-#             print(file)
-#             if cmd == file:
-#                 yield file
-#     yield None
-
-
-def witch(cmd):
-    global AOSENV
-    for path in AOSENV["AOSPATH"]:
-        tmp = os.path.join(path, cmd)
-        if os.access(tmp, os.X_OK):
-            return tmp
-    return None
-# def witch(cmd):
-#     pathGen = witchGen(cmd)
-#     return next(pathGen)
-
-
 #############################################
 if __name__ == "__main__":
     main()
